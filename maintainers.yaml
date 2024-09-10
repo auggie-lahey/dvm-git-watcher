@@ -1,0 +1,9 @@
+identifier: dvm-git-watcher
+maintainers:
+- npub1hw6amg8p24ne08c9gdq8hhpqx0t0pwanpae9z25crn7m9uy7yarse465gr
+relays:
+- wss://nos.lol/
+- wss://nostr-pub.wellorder.net/
+- wss://relay.damus.io/
+- wss://relay.nostr.band/
+- wss://relay.primal.net/
