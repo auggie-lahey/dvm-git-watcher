@@ -48,12 +48,11 @@ function handlePatchEvent(patchEvent: any) {
   console.log(patchEvent)
 
   const repoAddress = Address.from(getTag(patchEvent, "a")[1]);
-  const authorNpub = Address.fromEvent(patchEvent).pubkey;
+  const authorNpub = nip19.npubEncode(patchEvent.pubkey);
   const commitHash = getTag(patchEvent, "commit")[1];
 
 
-  // const npub = n.id().parse(patchEvent.pubkey);
-  sendNote(pool,`nostr:${authorNpub} comitted ${commitHash} to nostr:${repoAddress.toNaddr()} `)
+  sendNote(pool,`nostr:${authorNpub} comitted \`${commitHash}\` to nostr:${repoAddress.toNaddr()} `)
 }
 
 async function watchRepositoryCommits(repoAddress: Address, watchDurationMs: number) {
