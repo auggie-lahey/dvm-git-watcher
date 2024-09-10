@@ -51,7 +51,6 @@ function handlePatchEvent(patchEvent: any) {
   const authorNpub = nip19.npubEncode(patchEvent.pubkey);
   const commitHash = getTag(patchEvent, "commit")[1];
 
-
   sendNote(pool,`nostr:${authorNpub} comitted \`${commitHash}\` to nostr:${repoAddress.toNaddr()} `)
 }
 
