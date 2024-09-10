@@ -71,7 +71,7 @@ async function watchRepositoryCommits(repoAddress: Address, watchDurationMs: num
       limit: 2,
       // since: nostrNow(),
       since: 1722362400,
-      until: nostrNow()
+      // until: nostrNow()
       // until: 1725976800
     }
   ]
