@@ -17,7 +17,8 @@ export class RelayProvider implements IRelayProvider {
         const relays = [
             'wss://nos.lol',
             'wss://relay.damus.io',
-            'wss://relay.primal.net'
+            'wss://relay.primal.net',
+            'wss://relay.stens.dev',
         ];
 
         this.pool = new NPool({

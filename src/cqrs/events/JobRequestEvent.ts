@@ -9,6 +9,8 @@ import {RepoWatchRequestedEvent} from "./RepoWatchRequestedEvent.ts";
 import { Address } from '@welshman/util';
 import ICommandHandler from "../base/ICommandHandler.ts";
 import {WatchRepositoryCommand} from "../commands/WatchRepositoryCommand.ts";
+import {JobRequestRoutingService} from "../../JobRequestRoutingService.ts";
+import type IJobRequestRoutingService from "../../IJobRequestRoutingService.ts";
 
 export class JobRequestEvent implements IEvent {
     nostrEvent!: NostrEvent;
@@ -18,17 +20,18 @@ export class JobRequestEvent implements IEvent {
 export class JobRequestEventHandler implements IEventHandler<JobRequestEvent> {
 
     private events: NSet;
-    private watchRepositoryCommandHandler: ICommandHandler<WatchRepositoryCommand>
+    private supportedJobTypes = [
+        "git-proposal-commit-watch"
+    ]
 
     constructor(
         @inject("Logger") private logger: pino.Logger,
+        @inject(JobRequestRoutingService.name) private jobRequestRoutingService: IJobRequestRoutingService,
     ) {
         this.events = new NSet()
-        this.watchRepositoryCommandHandler = resolveCommandHandler(WatchRepositoryCommand.name)
     }
 
     async execute(event: JobRequestEvent): Promise<void> {
-        this.logger.info(`Handling job request event ${event.nostrEvent.id}`)
 
         // Deduplicate events
         if (this.events.has(event.nostrEvent)) {
@@ -36,26 +39,16 @@ export class JobRequestEventHandler implements IEventHandler<JobRequestEvent> {
         }
         this.events.add(event.nostrEvent);
 
-        console.log(event.nostrEvent);
+        this.logger.info(`Handling job request event ${event.nostrEvent.id}`)
+        // console.log(event.nostrEvent);
 
-        // TODO: validation
-        const params = getParams(event.nostrEvent);
+        const jobType = getTag(event.nostrEvent, "j")[1];
 
-        if (params.get("duration_millis") === undefined) {
-            console.log("missing parameter duration_millis");
+        if(!this.supportedJobTypes.includes(jobType)){
+            console.log(`JobType ${jobType} is not supported by this DVM.`)
             return;
         }
 
-        console.log(params);
-
-        const watchUntil = Number( params.get("duration_millis")); // TODO: Change to watch_untill
-        const iTag = getTag(event.nostrEvent, "i");
-        const repoAddress = Address.fromNaddr(iTag[1]);
-
-
-        const repoWatchRequestedEventHandler = resolveEventHandler(RepoWatchRequestedEvent.name)
-        await repoWatchRequestedEventHandler.execute({nostrEvent: event})
-
-        await this.watchRepositoryCommandHandler.execute({repoAddress: repoAddress, watchUntil: watchUntil})
+        await this.jobRequestRoutingService.route(jobType, event.nostrEvent)
     }
 }

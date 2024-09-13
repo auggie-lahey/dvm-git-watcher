@@ -3,6 +3,11 @@ import {inject, injectable} from "tsyringe";
 import IEventHandler from '../base/IEventHandler.ts';
 import IEvent from '../base/IEvent.ts';
 import {NostrEvent} from '@nostrify/nostrify';
+import {getParams, getTag} from "../../utils/nostrEventUtils.ts";
+import {resolveCommandHandler, resolveEventHandler} from "../base/cqrs.ts";
+import { Address } from '@welshman/util';
+import {WatchRepositoryCommand} from "../commands/WatchRepositoryCommand.ts";
+import ICommandHandler from "../base/ICommandHandler.ts";
 
 export class RepoWatchRequestedEvent implements IEvent {
     nostrEvent!: NostrEvent;
@@ -10,12 +15,27 @@ export class RepoWatchRequestedEvent implements IEvent {
 
 @injectable()
 export class RepoWatchRequestedEventHandler implements IEventHandler<RepoWatchRequestedEvent> {
+    private watchRepositoryCommandHandler: ICommandHandler<WatchRepositoryCommand>
 
     constructor(@inject("Logger") private logger: pino.Logger) {
-
+        this.watchRepositoryCommandHandler = resolveCommandHandler(WatchRepositoryCommand.name)
     }
 
     async execute(event: RepoWatchRequestedEvent): Promise<void> {
-        this.logger.info(`Handling Nostr event ${event.nostrEvent.id} received.`)
+        // TODO: validation
+        const params = getParams(event.nostrEvent);
+
+        if (params.get("watch_untill") === undefined) {
+            console.log("missing parameter watch_untill");
+            return;
+        }
+
+        console.log(params);
+
+        const watchUntil = Number( params.get("watch_untill"));
+        const iTag = getTag(event.nostrEvent, "i");
+        const repoAddress = Address.fromNaddr(iTag[1]);
+
+        await this.watchRepositoryCommandHandler.execute({repoAddress: repoAddress, watchUntil: watchUntil})
     }
 }

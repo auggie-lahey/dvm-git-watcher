@@ -7,12 +7,13 @@ import type IRelayProvider from "../IRelayProvider.ts";
 import {resolveEventHandler} from "../cqrs/base/cqrs.ts";
 import IEventHandler from "../cqrs/base/IEventHandler.ts";
 import {NRelay} from '@nostrify/nostrify';
+import {nostrNow} from "../utils/nostrEventUtils.ts";
 
 @injectable()
 export class JobRequestListener implements IEventListener {
 
     private logger: pino.Logger;
-    private nostrEventHandler: IEventHandler<JobRequestEvent>;
+    private jobRequestEventHandler: IEventHandler<JobRequestEvent>;
     private relay: NRelay;
 
     constructor(
@@ -20,7 +21,7 @@ export class JobRequestListener implements IEventListener {
         @inject(RelayProvider.name) relayProvider: IRelayProvider,
     ) {
         this.logger = logger;
-        this.nostrEventHandler = resolveEventHandler(JobRequestEvent.name);
+        this.jobRequestEventHandler = resolveEventHandler(JobRequestEvent.name);
         this.relay = relayProvider.getDefaultPool();
     }
 
@@ -31,13 +32,15 @@ export class JobRequestListener implements IEventListener {
             {
                 kinds: [68001],
                 "#j": ["git-proposal-commit-watch"],
-                limit: 1000
+                limit: 1000,
+                since: nostrNow() - 10000
             }
         ]
 
         for await (const msg of this.relay.req(filters, {})) {
+            console.log(msg[2])
             if (msg[0] === 'EVENT') {
-                await this.nostrEventHandler.execute({nostrEvent: msg[2]})
+                await this.jobRequestEventHandler.execute({nostrEvent: msg[2]})
             }
             if (msg[0] === 'EOSE') {
                 console.log("end of stream")

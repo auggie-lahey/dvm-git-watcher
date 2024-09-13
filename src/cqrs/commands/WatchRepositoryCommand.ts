@@ -10,6 +10,7 @@ import {resolveCommandHandler, resolveEventHandler} from "../base/cqrs.ts";
 import {PublishTextNoteCommand} from "./PublishTextNoteCommand.ts";
 import IEventHandler from "../base/IEventHandler.ts";
 import {GitPatchEvent} from "../events/GitPatchEvent.ts";
+import {nostrNow} from "../../utils/nostrEventUtils.ts";
 
 export class WatchRepositoryCommand implements ICommand {
     repoAddress!: Address
@@ -48,15 +49,10 @@ export class WatchRepositoryCommandHandler implements ICommandHandler<WatchRepos
             {
                 kinds: [1617], // 1617 = Patches
                 "#a": [`${repoKind}:${repoOwnerPubkey}:${repoIdentifier}`],
-                limit: 2,
-                // since: nostrNow(),
-                since: 1722362400,
-                // until: nostrNow()
-                // until: 1725976800
+                limit: 50,
+                since: nostrNow(),
             }
         ]
-
-        console.log(patchFilters)
 
         // Listen for repo events until watchDurationMs is over
         for await (const evnt of this.relay.req(patchFilters, {})) {

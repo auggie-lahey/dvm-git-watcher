@@ -4,6 +4,7 @@ import {registerCommandHandler, registerEventHandler} from "./cqrs/base/cqrs.ts"
 import {RepoWatchRequestedEvent, RepoWatchRequestedEventHandler} from "./cqrs/events/RepoWatchRequestedEvent.ts";
 import {PublishTextNoteCommand, PublishTextNoteCommandHandler} from "./cqrs/commands/PublishTextNoteCommand.ts";
 import { RelayProvider } from './RelayProvider.ts';
+import { JobRequestRoutingService } from './JobRequestRoutingService.ts';
 import {JobRequestListener} from "./listeners/JobRequestListener.ts";
 import IEventListener from "./listeners/IEventListener.ts";
 import {JobRequestEvent, JobRequestEventHandler} from "./cqrs/events/JobRequestEvent.ts";
@@ -28,6 +29,7 @@ export async function startup() {
 
     // Listeners
     container.register(JobRequestListener.name, { useClass: JobRequestListener });
+    container.register(JobRequestRoutingService.name, { useClass: JobRequestRoutingService });
 
     logger.info("All services registered");
 
