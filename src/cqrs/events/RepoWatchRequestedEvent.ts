@@ -30,12 +30,16 @@ export class RepoWatchRequestedEventHandler implements IEventHandler<RepoWatchRe
             return;
         }
 
-        console.log(params);
+        try {
 
-        const watchUntil = Number( params.get("watch_untill"));
-        const iTag = getTag(event.nostrEvent, "i");
-        const repoAddress = Address.fromNaddr(iTag[1]);
+            const iTag = getTag(event.nostrEvent, "i");
+            const repoAddress = Address.fromNaddr(iTag[1]);
+            const watchUntil = Number( params.get("watch_untill"));
 
-        await this.watchRepositoryCommandHandler.execute({repoAddress: repoAddress, watchUntil: watchUntil})
+            await this.watchRepositoryCommandHandler.execute({repoAddress: repoAddress, watchUntil: watchUntil})
+        } catch (e){
+            this.logger.error("error when trying to start watch.", e)
+        }
+
     }
 }

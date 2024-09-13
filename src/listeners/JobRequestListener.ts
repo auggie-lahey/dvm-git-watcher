@@ -33,14 +33,13 @@ export class JobRequestListener implements IEventListener {
                 kinds: [68001],
                 "#j": ["git-proposal-commit-watch"],
                 limit: 1000,
-                since: nostrNow() - 10000
+                since: nostrNow()
             }
         ]
 
         for await (const msg of this.relay.req(filters, {})) {
-            console.log(msg[2])
             if (msg[0] === 'EVENT') {
-                await this.jobRequestEventHandler.execute({nostrEvent: msg[2]})
+                 this.jobRequestEventHandler.execute({nostrEvent: msg[2]})
             }
             if (msg[0] === 'EOSE') {
                 console.log("end of stream")
