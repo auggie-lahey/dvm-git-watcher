@@ -11,12 +11,12 @@ import ICommandHandler from "../base/ICommandHandler.ts";
 import { nip19 } from 'nostr-tools';
 import type IRelayProvider from "../../IRelayProvider.ts";
 
-export class GitPatchEvent implements IEvent {
+export class GitStateAnnouncementEvent implements IEvent {
     nostrEvent!: NostrEvent;
 }
 
 @injectable()
-export class GitPatchEventHandler implements IEventHandler<GitPatchEvent> {
+export class GitStateAnnouncementEventHandler implements IEventHandler<GitStateAnnouncementEvent> {
 
 
     private publishTextNoteCommandHandler: ICommandHandler<PublishTextNoteCommand>
@@ -27,13 +27,16 @@ export class GitPatchEventHandler implements IEventHandler<GitPatchEvent> {
         this.publishTextNoteCommandHandler = resolveCommandHandler(PublishTextNoteCommand.name)
     }
 
-    async execute(event: GitPatchEvent): Promise<void> {
+    async execute(event: GitStateAnnouncementEvent): Promise<void> {
         console.log(event.nostrEvent)
 
-        const repoAddress = Address.from(getTag(event.nostrEvent, "a")[1]);
+        // TODO: We need to verify the author, now everyone can send this event
         const authorNpub = nip19.npubEncode(event.nostrEvent.pubkey);
-        const commitHash = getTag(event.nostrEvent, "commit")[1];
+        const repoIdentifier = getTag(event.nostrEvent, "d")[1]
+        const head = getTag(event.nostrEvent, "HEAD")[1];
 
-        this.publishTextNoteCommandHandler.execute({message: `nostr:${authorNpub} comitted \`${commitHash}\` to nostr:${repoAddress.toNaddr()} `})
+        const repoAddress = new Address(30617, event.nostrEvent.pubkey, repoIdentifier)
+
+        await this.publishTextNoteCommandHandler.execute({message: `nostr:${authorNpub} changed HEAD of \`${head}\` on repo:${repoAddress.toNaddr()} `})
     }
 }

@@ -31,7 +31,6 @@ export class RepoWatchRequestedEventHandler implements IEventHandler<RepoWatchRe
         }
 
         try {
-
             const iTag = getTag(event.nostrEvent, "i");
             const repoAddress = Address.fromNaddr(iTag[1]);
             const watchUntil = Number( params.get("watch_untill"));

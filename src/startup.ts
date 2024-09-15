@@ -10,6 +10,7 @@ import IEventListener from "./listeners/IEventListener.ts";
 import {JobRequestEvent, JobRequestEventHandler} from "./cqrs/events/JobRequestEvent.ts";
 import {WatchRepositoryCommand, WatchRepositoryCommandHandler} from "./cqrs/commands/WatchRepositoryCommand.ts";
 import {GitPatchEvent, GitPatchEventHandler} from "./cqrs/events/GitPatchEvent.ts";
+import {GitStateAnnouncementEvent, GitStateAnnouncementEventHandler} from "./cqrs/events/GitStateAnnouncementEvent.ts";
 
 export async function startup() {
     const logger = pino();
@@ -23,6 +24,7 @@ export async function startup() {
     registerEventHandler(JobRequestEvent.name, JobRequestEventHandler);
     registerEventHandler(JobRequestEvent.name, JobRequestEventHandler);
     registerEventHandler(GitPatchEvent.name, GitPatchEventHandler);
+    registerEventHandler(GitStateAnnouncementEvent.name, GitStateAnnouncementEventHandler);
 
     registerCommandHandler(PublishTextNoteCommand.name, PublishTextNoteCommandHandler)
     registerCommandHandler(WatchRepositoryCommand.name, WatchRepositoryCommandHandler)

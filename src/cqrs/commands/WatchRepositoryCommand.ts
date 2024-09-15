@@ -11,6 +11,8 @@ import {PublishTextNoteCommand} from "./PublishTextNoteCommand.ts";
 import IEventHandler from "../base/IEventHandler.ts";
 import {GitPatchEvent} from "../events/GitPatchEvent.ts";
 import {nostrNow} from "../../utils/nostrEventUtils.ts";
+import { GitStateAnnouncementEvent } from '../events/GitStateAnnouncementEvent.ts';
+import {NSet} from "@nostrify/nostrify";
 
 export class WatchRepositoryCommand implements ICommand {
     repoAddress!: Address
@@ -22,8 +24,10 @@ export class WatchRepositoryCommandHandler implements ICommandHandler<WatchRepos
 
     private relay: NRelay;
     private logger: pino.Logger;
+    private events: NSet;
     private publishTextNoteCommandHandler: ICommandHandler<PublishTextNoteCommand>
     private gitPatchEventHandler: IEventHandler<GitPatchEvent>
+    private gitStateAnnouncementEventHandler: IEventHandler<GitStateAnnouncementEvent>
 
     constructor(
         @inject("Logger") logger: pino.Logger,
@@ -33,6 +37,9 @@ export class WatchRepositoryCommandHandler implements ICommandHandler<WatchRepos
         this.relay = relayProvider.getDefaultPool();
         this.publishTextNoteCommandHandler = resolveCommandHandler(PublishTextNoteCommand.name)
         this.gitPatchEventHandler = resolveEventHandler(GitPatchEvent.name)
+        this.gitStateAnnouncementEventHandler = resolveEventHandler(GitStateAnnouncementEvent.name)
+
+        this.events = new NSet()
     }
 
     async execute(command: WatchRepositoryCommand): Promise<void> {
@@ -47,8 +54,15 @@ export class WatchRepositoryCommandHandler implements ICommandHandler<WatchRepos
 
         var patchFilters = [
             {
-                kinds: [1617], // 1617 = Patches
+                kinds: [1617], // 1617 = Patches, 30618 = State announcement
                 "#a": [`${repoKind}:${repoOwnerPubkey}:${repoIdentifier}`],
+                limit: 50,
+                since: nostrNow(),
+            },
+            {
+                kinds: [30618], // 30618 = State announcement
+                authors: [repoOwnerPubkey],
+                "#d": [repoIdentifier],
                 limit: 50,
                 since: nostrNow(),
             }
@@ -57,7 +71,18 @@ export class WatchRepositoryCommandHandler implements ICommandHandler<WatchRepos
         // Listen for repo events until watchDurationMs is over
         for await (const evnt of this.relay.req(patchFilters, {})) {
             if (evnt[0] === 'EVENT') {
-                await this.gitPatchEventHandler.execute({nostrEvent: evnt[2]})
+                console.log(evnt[2])
+                // Deduplicate events
+                if (this.events.has(evnt[2])) {
+                    return;
+                }
+                this.events.add(evnt[2]);
+
+                if(evnt[2].kind == 1617){
+                    await this.gitPatchEventHandler.execute({nostrEvent: evnt[2]})
+                } else{
+                    await this.gitStateAnnouncementEventHandler.execute({nostrEvent: evnt[2]})
+                }
             }
             if (evnt[0] === 'EOSE') {
                 console.log("end of stream")
