@@ -11,3 +11,4 @@ docker build --platform linux/amd64 . -t dvm-git-watcher
 # To store docker image as tarball 
 docker save dvm-git-watcher > dvm-git-watcher.tar
 ```
+
