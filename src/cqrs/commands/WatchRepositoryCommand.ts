@@ -13,6 +13,8 @@ import {GitPatchEvent} from "../events/GitPatchEvent.ts";
 import {nostrNow} from "../../utils/nostrEventUtils.ts";
 import { GitStateAnnouncementEvent } from '../events/GitStateAnnouncementEvent.ts';
 import {NSet} from "@nostrify/nostrify";
+import {EventListenerRegistry} from "../../listeners/base/EventListenerRegistry.ts";
+import type {IEventListenerRegistry} from "../../listeners/base/IEventListenerRegistry.ts";
 
 export class WatchRepositoryCommand implements ICommand {
     repoAddress!: Address
@@ -28,65 +30,60 @@ export class WatchRepositoryCommandHandler implements ICommandHandler<WatchRepos
     private publishTextNoteCommandHandler: ICommandHandler<PublishTextNoteCommand>
     private gitPatchEventHandler: IEventHandler<GitPatchEvent>
     private gitStateAnnouncementEventHandler: IEventHandler<GitStateAnnouncementEvent>
+    eventListenerRegistry: IEventListenerRegistry;
 
     constructor(
         @inject("Logger") logger: pino.Logger,
         @inject(RelayProvider.name) relayProvider: IRelayProvider,
+        @inject(EventListenerRegistry.name) eventListenerRegistry: IEventListenerRegistry,
     ) {
         this.logger = logger;
         this.relay = relayProvider.getDefaultPool();
         this.publishTextNoteCommandHandler = resolveCommandHandler(PublishTextNoteCommand.name)
         this.gitPatchEventHandler = resolveEventHandler(GitPatchEvent.name)
         this.gitStateAnnouncementEventHandler = resolveEventHandler(GitStateAnnouncementEvent.name)
+        this.eventListenerRegistry = eventListenerRegistry;
 
         this.events = new NSet()
     }
 
     async execute(command: WatchRepositoryCommand): Promise<void> {
-        // broadcast
-        this.publishTextNoteCommandHandler.execute({message: `I started watching the following repository until ${command.watchUntil}. nostr:${command.repoAddress.toNaddr()} `})
-        console.log(`Started listening to repo: ${command.repoAddress}`)
-
         // subscribe to events for repository
         const repoKind = command.repoAddress.kind;
         const repoOwnerPubkey = command.repoAddress.pubkey;
         const repoIdentifier = command.repoAddress.identifier;
 
-        var patchFilters = [
-            {
-                kinds: [1617], // 1617 = Patches, 30618 = State announcement
-                "#a": [`${repoKind}:${repoOwnerPubkey}:${repoIdentifier}`],
-                limit: 50,
-                since: nostrNow(),
-            },
-            {
-                kinds: [30618], // 30618 = State announcement
-                authors: [repoOwnerPubkey],
-                "#d": [repoIdentifier],
-                limit: 50,
-                since: nostrNow(),
-            }
-        ]
-
-        // Listen for repo events until watchDurationMs is over
-        for await (const evnt of this.relay.req(patchFilters, {})) {
-            if (evnt[0] === 'EVENT') {
-                console.log(evnt[2])
-                // Deduplicate events
-                if (this.events.has(evnt[2])) {
-                    return;
+        // Listen for patches
+        this.eventListenerRegistry.add(
+            `listen-patch-${command.repoAddress.toNaddr}`,
+            [
+                {
+                    kinds: [1617], // 1617 = Patches
+                    "#a": [`${repoKind}:${repoOwnerPubkey}:${repoIdentifier}`],
+                    limit: 50,
+                    since: nostrNow(),
                 }
-                this.events.add(evnt[2]);
+            ],
+            this.gitPatchEventHandler
+        )
 
-                if(evnt[2].kind == 1617){
-                    await this.gitPatchEventHandler.execute({nostrEvent: evnt[2]})
-                } else{
-                    await this.gitStateAnnouncementEventHandler.execute({nostrEvent: evnt[2]})
+        // Listen for state announcements (commit by maintainer)
+        this.eventListenerRegistry.add(
+            `listen-state-announcment-${command.repoAddress.toNaddr}`,
+            [
+                {
+                    kinds: [30618], // 30618 = State announcement
+                    authors: [repoOwnerPubkey],
+                    "#d": [repoIdentifier],
+                    limit: 50,
+                    since: nostrNow(),
                 }
-            }
-            if (evnt[0] === 'EOSE') {
-                console.log("end of stream")
-            }
-        }
+            ],
+            this.gitStateAnnouncementEventHandler
+        )
+
+        // broadcast
+        await this.publishTextNoteCommandHandler.execute({message: `I started watching the following repository until ${command.watchUntil}. nostr:${command.repoAddress.toNaddr()} `})
+        console.log(`Started listening to repo: ${command.repoAddress}`)
     }
 }
