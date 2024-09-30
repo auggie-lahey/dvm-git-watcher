@@ -18,5 +18,9 @@ export function getParams(event: NostrEvent){
 export const nostrNow = (): number => Math.floor(Date.now() / 1000);
 
 export function getTag(event: NostrEvent, tagName: string) : string[] {
-   return event.tags.filter(item => item[0] === tagName).reduce(item => item[0]);
+    return event.tags.filter(item => item[0] === tagName).reduce(item => item[0]);
+}
+
+export function getTagStartingWith(event: NostrEvent, start: string) : string[][] {
+    return event.tags.filter(item => item[0].startsWith(start));
 }

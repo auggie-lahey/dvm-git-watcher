@@ -7,7 +7,6 @@
       "jsr:@std/encoding@^0.224.1": "jsr:@std/encoding@0.224.3",
       "npm:@scure/bip32@^1.4.0": "npm:@scure/bip32@1.5.0",
       "npm:@scure/bip39@^1.3.0": "npm:@scure/bip39@1.4.0",
-      "npm:@welshman/lib@^0.0.17": "npm:@welshman/lib@0.0.17",
       "npm:@welshman/util@^0.0.30": "npm:@welshman/util@0.0.30",
       "npm:lru-cache@^10.2.0": "npm:lru-cache@10.4.3",
       "npm:nostr-tools@^2.7.0": "npm:nostr-tools@2.7.2",
@@ -309,10 +308,7 @@
       }
     }
   },
-  "remote": {
-    "https://deno.land/x/reflect_metadata@v0.1.12/Reflect.ts": "eced7b7e642853c6fb9a209f96ddd1932ab1e0fc3c514705c87d56169c8fe260",
-    "https://deno.land/x/reflect_metadata@v0.1.12/mod.ts": "8b5e3b20f1e604c118df433e84a409b1d5116e885001047134cc42ecf84fa2cd"
-  },
+  "remote": {},
   "workspace": {
     "dependencies": [
       "jsr:@nostrify/nostrify@^0.30.1",

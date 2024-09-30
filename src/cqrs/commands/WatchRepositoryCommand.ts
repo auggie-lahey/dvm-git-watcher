@@ -4,7 +4,6 @@ import ICommand from "../base/ICommand.ts";
 import ICommandHandler from '../base/ICommandHandler.ts';
 import {RelayProvider} from "../../RelayProvider.ts";
 import type IRelayProvider from "../../IRelayProvider.ts";
-import {NRelay} from '@nostrify/nostrify';
 import { Address } from '@welshman/util';
 import {resolveCommandHandler, resolveEventHandler} from "../base/cqrs.ts";
 import {PublishTextNoteCommand} from "./PublishTextNoteCommand.ts";
@@ -12,7 +11,6 @@ import IEventHandler from "../base/IEventHandler.ts";
 import {GitPatchEvent} from "../events/GitPatchEvent.ts";
 import {nostrNow} from "../../utils/nostrEventUtils.ts";
 import { GitStateAnnouncementEvent } from '../events/GitStateAnnouncementEvent.ts';
-import {NSet} from "@nostrify/nostrify";
 import {EventListenerRegistry} from "../../listeners/EventListenerRegistry.ts";
 import type {IEventListenerRegistry} from "../../listeners/IEventListenerRegistry.ts";
 
@@ -24,9 +22,7 @@ export class WatchRepositoryCommand implements ICommand {
 @injectable()
 export class WatchRepositoryCommandHandler implements ICommandHandler<WatchRepositoryCommand> {
 
-    private relay: NRelay;
     private logger: pino.Logger;
-    private events: NSet;
     private publishTextNoteCommandHandler: ICommandHandler<PublishTextNoteCommand>
     private gitPatchEventHandler: IEventHandler<GitPatchEvent>
     private gitStateAnnouncementEventHandler: IEventHandler<GitStateAnnouncementEvent>
@@ -38,13 +34,10 @@ export class WatchRepositoryCommandHandler implements ICommandHandler<WatchRepos
         @inject(EventListenerRegistry.name) eventListenerRegistry: IEventListenerRegistry,
     ) {
         this.logger = logger;
-        this.relay = relayProvider.getDefaultPool();
         this.publishTextNoteCommandHandler = resolveCommandHandler(PublishTextNoteCommand.name)
         this.gitPatchEventHandler = resolveEventHandler(GitPatchEvent.name)
         this.gitStateAnnouncementEventHandler = resolveEventHandler(GitStateAnnouncementEvent.name)
         this.eventListenerRegistry = eventListenerRegistry;
-
-        this.events = new NSet()
     }
 
     async execute(command: WatchRepositoryCommand): Promise<void> {
@@ -84,6 +77,6 @@ export class WatchRepositoryCommandHandler implements ICommandHandler<WatchRepos
 
         // broadcast
         await this.publishTextNoteCommandHandler.execute({message: `I started watching the following repository until ${command.watchUntil}. nostr:${command.repoAddress.toNaddr()} `})
-        console.log(`Started listening to repo: ${command.repoAddress}`)
+        this.logger.info(`Started listening to repo: ${command.repoAddress} (${command.repoAddress.toNaddr})`)
     }
 }

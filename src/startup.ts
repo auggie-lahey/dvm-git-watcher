@@ -10,6 +10,8 @@ import {GitStateAnnouncementEvent, GitStateAnnouncementEventHandler} from "./cqr
 import {EventListenerRegistry} from "./listeners/EventListenerRegistry.ts";
 import {IEventListenerRegistry} from "./listeners/IEventListenerRegistry.ts";
 import {nostrNow} from "./utils/nostrEventUtils.ts";
+import { EventPublisher } from './publisher/EventPublisher.ts';
+import {StartBuildCommand, StartBuildCommandHandler} from "./cqrs/commands/StartBuildCommand.ts";
 
 export async function startup() {
     const logger = pino();
@@ -17,6 +19,7 @@ export async function startup() {
 
     container.registerInstance("Logger", logger);
     container.register(RelayProvider.name, { useClass: RelayProvider });
+    container.register(EventPublisher.name, { useClass: EventPublisher });
 
     // CQRS registrations
     registerEventHandler(RepoWatchRequestedEvent.name, RepoWatchRequestedEventHandler);
@@ -25,6 +28,7 @@ export async function startup() {
 
     registerCommandHandler(PublishTextNoteCommand.name, PublishTextNoteCommandHandler)
     registerCommandHandler(WatchRepositoryCommand.name, WatchRepositoryCommandHandler)
+    registerCommandHandler(StartBuildCommand.name, StartBuildCommandHandler)
 
     container.registerSingleton(EventListenerRegistry.name, EventListenerRegistry);
 
