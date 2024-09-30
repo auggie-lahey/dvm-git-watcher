@@ -52,7 +52,7 @@ export class GitStateAnnouncementEventHandler implements IEventHandler<GitStateA
         // TODO: account for multiple refs
         var firstRef = refs[0];
         var branchName = firstRef[0].split("refs/heads/")[2];
-        var commitHash = refs[1][1];
+        var commitHash = firstRef[1];
 
         await this.startBuildCommandHanlder.execute({repoAddress: repoAddress, branchName: branchName, commitHash: commitHash})
         await this.publishTextNoteCommandHandler.execute({message: `nostr:${authorNpub} changed HEAD of \`${head}\` on repo:${repoAddress.toNaddr()} `})
