@@ -4,7 +4,7 @@ import IEventHandler from '../base/IEventHandler.ts';
 import IEvent from '../base/IEvent.ts';
 import {NostrEvent} from '@nostrify/nostrify';
 import {getParams, getTag} from "../../utils/nostrEventUtils.ts";
-import {resolveCommandHandler, resolveEventHandler} from "../base/cqrs.ts";
+import {resolveCommandHandler} from "../base/cqrs.ts";
 import { Address } from '@welshman/util';
 import {WatchRepositoryCommand} from "../commands/WatchRepositoryCommand.ts";
 import ICommandHandler from "../base/ICommandHandler.ts";

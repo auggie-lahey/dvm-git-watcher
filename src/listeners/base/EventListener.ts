@@ -63,7 +63,7 @@ export class EventListener implements IEventListener {
         }
         this.cacheRelay.add(nostrEvent);
 
-        this._logger.info(`Handling job request event ${nostrEvent.id}`)
+        this._logger.info(`Handling event ${nostrEvent.id}`)
 
         await this._eventHandler.execute({nostrEvent: nostrEvent})
     }
