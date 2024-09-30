@@ -1,16 +1,15 @@
 import { container } from 'tsyringe';
 import pino from 'pino';
-import {registerCommandHandler, registerEventHandler} from "./cqrs/base/cqrs.ts";
+import {registerCommandHandler, registerEventHandler, resolveEventHandler} from "./cqrs/base/cqrs.ts";
 import {RepoWatchRequestedEvent, RepoWatchRequestedEventHandler} from "./cqrs/events/RepoWatchRequestedEvent.ts";
 import {PublishTextNoteCommand, PublishTextNoteCommandHandler} from "./cqrs/commands/PublishTextNoteCommand.ts";
 import { RelayProvider } from './RelayProvider.ts';
-import { JobRequestRoutingService } from './JobRequestRoutingService.ts';
-import {JobRequestListener} from "./listeners/JobRequestListener.ts";
-import IEventListener from "./listeners/IEventListener.ts";
-import {JobRequestEvent, JobRequestEventHandler} from "./cqrs/events/JobRequestEvent.ts";
 import {WatchRepositoryCommand, WatchRepositoryCommandHandler} from "./cqrs/commands/WatchRepositoryCommand.ts";
 import {GitPatchEvent, GitPatchEventHandler} from "./cqrs/events/GitPatchEvent.ts";
 import {GitStateAnnouncementEvent, GitStateAnnouncementEventHandler} from "./cqrs/events/GitStateAnnouncementEvent.ts";
+import {EventListenerRegistry} from "./listeners/base/EventListenerRegistry.ts";
+import {IEventListenerRegistry} from "./listeners/base/IEventListenerRegistry.ts";
+import {nostrNow} from "./utils/nostrEventUtils.ts";
 
 export async function startup() {
     const logger = pino();
@@ -21,22 +20,31 @@ export async function startup() {
 
     // CQRS registrations
     registerEventHandler(RepoWatchRequestedEvent.name, RepoWatchRequestedEventHandler);
-    registerEventHandler(JobRequestEvent.name, JobRequestEventHandler);
-    registerEventHandler(JobRequestEvent.name, JobRequestEventHandler);
     registerEventHandler(GitPatchEvent.name, GitPatchEventHandler);
     registerEventHandler(GitStateAnnouncementEvent.name, GitStateAnnouncementEventHandler);
 
     registerCommandHandler(PublishTextNoteCommand.name, PublishTextNoteCommandHandler)
     registerCommandHandler(WatchRepositoryCommand.name, WatchRepositoryCommandHandler)
 
-    // Listeners
-    container.register(JobRequestListener.name, { useClass: JobRequestListener });
-    container.register(JobRequestRoutingService.name, { useClass: JobRequestRoutingService });
+    container.registerSingleton(EventListenerRegistry.name, EventListenerRegistry);
 
     logger.info("All services registered");
 
-    const dvmRequestListener: IEventListener = container.resolve(JobRequestListener.name);
-    await dvmRequestListener.run();
+    setupListeners()
 
     logger.info("Startup completed");
+}
+
+function setupListeners() {
+    const eventListenerRegistry: IEventListenerRegistry = container.resolve(EventListenerRegistry.name);
+    var filters = [
+        {
+            kinds: [68001],
+            "#j": ["git-proposal-commit-watch"],
+            limit: 1000,
+            since: nostrNow()
+        }
+    ]
+
+    eventListenerRegistry.add("watch-job-requests", filters, resolveEventHandler(RepoWatchRequestedEvent.name))
 }
