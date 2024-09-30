@@ -1,6 +1,6 @@
 import type pino from "pino";
 import IEventListener from "./IEventListener.ts";
-import IEventHandler from "../../cqrs/base/IEventHandler.ts";
+import IEventHandler from "../cqrs/base/IEventHandler.ts";
 import {NostrFilter} from "https://jsr.io/@nostrify/types/0.30.0/NostrFilter.ts";
 import {NRelay} from "https://jsr.io/@nostrify/types/0.30.0/NRelay.ts";
 import { NostrEvent } from 'https://jsr.io/@nostrify/types/0.30.0/NostrEvent.ts';
@@ -50,9 +50,10 @@ export class EventListener implements IEventListener {
 
             if (msg[0] === 'EVENT') {
                 await this.handle(msg[2])
+                continue;
             }
-            if (msg[0] === 'EOSE') {
-                this._logger.info("end of stream")
+            if (msg[0] !== 'EOSE') {
+                this._logger.info(`${msg[0]}: ${msg[1]} - ${msg[2]}`);
             }
         }
     }

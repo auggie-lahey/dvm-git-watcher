@@ -7,8 +7,8 @@ import { RelayProvider } from './RelayProvider.ts';
 import {WatchRepositoryCommand, WatchRepositoryCommandHandler} from "./cqrs/commands/WatchRepositoryCommand.ts";
 import {GitPatchEvent, GitPatchEventHandler} from "./cqrs/events/GitPatchEvent.ts";
 import {GitStateAnnouncementEvent, GitStateAnnouncementEventHandler} from "./cqrs/events/GitStateAnnouncementEvent.ts";
-import {EventListenerRegistry} from "./listeners/base/EventListenerRegistry.ts";
-import {IEventListenerRegistry} from "./listeners/base/IEventListenerRegistry.ts";
+import {EventListenerRegistry} from "./listeners/EventListenerRegistry.ts";
+import {IEventListenerRegistry} from "./listeners/IEventListenerRegistry.ts";
 import {nostrNow} from "./utils/nostrEventUtils.ts";
 
 export async function startup() {

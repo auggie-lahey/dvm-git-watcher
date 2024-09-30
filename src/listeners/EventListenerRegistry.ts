@@ -2,11 +2,11 @@ import {inject, injectable} from "tsyringe";
 import type pino from "pino";
 import IEventListener from "./IEventListener.ts";
 import {IEventListenerRegistry} from "./IEventListenerRegistry.ts";
-import IEventHandler from "../../cqrs/base/IEventHandler.ts";
-import IEvent from "../../cqrs/base/IEvent.ts";
+import IEventHandler from "../cqrs/base/IEventHandler.ts";
+import IEvent from "../cqrs/base/IEvent.ts";
 import { EventListener } from './EventListener.ts';
-import {RelayProvider} from "../../RelayProvider.ts";
-import type IRelayProvider from "../../IRelayProvider.ts";
+import {RelayProvider} from "../RelayProvider.ts";
+import type IRelayProvider from "../IRelayProvider.ts";
 import { NRelay, NostrFilter } from '@nostrify/nostrify';
 
 @injectable()

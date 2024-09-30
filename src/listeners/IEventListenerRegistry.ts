@@ -1,5 +1,5 @@
-import IEvent from "../../cqrs/base/IEvent.ts";
-import IEventHandler from "../../cqrs/base/IEventHandler.ts";
+import IEvent from "../cqrs/base/IEvent.ts";
+import IEventHandler from "../cqrs/base/IEventHandler.ts";
 import {NostrFilter} from "@nostrify/nostrify";
 
 export interface IEventListenerRegistry {

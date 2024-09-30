@@ -13,8 +13,8 @@ import {GitPatchEvent} from "../events/GitPatchEvent.ts";
 import {nostrNow} from "../../utils/nostrEventUtils.ts";
 import { GitStateAnnouncementEvent } from '../events/GitStateAnnouncementEvent.ts';
 import {NSet} from "@nostrify/nostrify";
-import {EventListenerRegistry} from "../../listeners/base/EventListenerRegistry.ts";
-import type {IEventListenerRegistry} from "../../listeners/base/IEventListenerRegistry.ts";
+import {EventListenerRegistry} from "../../listeners/EventListenerRegistry.ts";
+import type {IEventListenerRegistry} from "../../listeners/IEventListenerRegistry.ts";
 
 export class WatchRepositoryCommand implements ICommand {
     repoAddress!: Address
