@@ -3,13 +3,11 @@ import {inject, injectable} from "tsyringe";
 import IEventHandler from '../base/IEventHandler.ts';
 import IEvent from '../base/IEvent.ts';
 import {NostrEvent} from '@nostrify/nostrify';
-import {getParams, getTag, getTagStartingWith} from "../../utils/nostrEventUtils.ts";
-import {resolveCommandHandler} from "../base/cqrs.ts";
+import {getTag, getTagStartingWith} from "../../utils/nostrEventUtils.ts";
 import { Address } from '@welshman/util';
 import {PublishTextNoteCommand} from "../commands/PublishTextNoteCommand.ts";
-import ICommandHandler from "../base/ICommandHandler.ts";
+import type ICommandHandler from "../base/ICommandHandler.ts";
 import { nip19 } from 'nostr-tools';
-import type IRelayProvider from "../../IRelayProvider.ts";
 import {StartBuildCommand} from "../commands/StartBuildCommand.ts";
 
 export class GitStateAnnouncementEvent implements IEvent {
@@ -19,15 +17,11 @@ export class GitStateAnnouncementEvent implements IEvent {
 @injectable()
 export class GitStateAnnouncementEventHandler implements IEventHandler<GitStateAnnouncementEvent> {
 
-
-    private publishTextNoteCommandHandler: ICommandHandler<PublishTextNoteCommand>
-    private startBuildCommandHanlder: ICommandHandler<StartBuildCommand>
-
     constructor(
         @inject("Logger") private logger: pino.Logger,
+        @inject(StartBuildCommand.name) private startBuildCommandHanlder: ICommandHandler<StartBuildCommand>,
+        @inject(PublishTextNoteCommand.name) private publishTextNoteCommandHandler: ICommandHandler<PublishTextNoteCommand>,
     ) {
-        this.publishTextNoteCommandHandler = resolveCommandHandler(PublishTextNoteCommand.name)
-        this.startBuildCommandHanlder = resolveCommandHandler(StartBuildCommand.name)
     }
 
     async execute(event: GitStateAnnouncementEvent): Promise<void> {

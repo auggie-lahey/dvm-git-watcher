@@ -2,12 +2,9 @@ import {inject, injectable} from "tsyringe";
 import type pino from "pino";
 import ICommand from "../base/ICommand.ts";
 import ICommandHandler from '../base/ICommandHandler.ts';
-import {RelayProvider} from "../../RelayProvider.ts";
-import type IRelayProvider from "../../IRelayProvider.ts";
 import { Address } from '@welshman/util';
-import {resolveCommandHandler, resolveEventHandler} from "../base/cqrs.ts";
 import {PublishTextNoteCommand} from "./PublishTextNoteCommand.ts";
-import IEventHandler from "../base/IEventHandler.ts";
+import type IEventHandler from "../base/IEventHandler.ts";
 import {GitPatchEvent} from "../events/GitPatchEvent.ts";
 import {nostrNow} from "../../utils/nostrEventUtils.ts";
 import { GitStateAnnouncementEvent } from '../events/GitStateAnnouncementEvent.ts';
@@ -21,23 +18,13 @@ export class WatchRepositoryCommand implements ICommand {
 
 @injectable()
 export class WatchRepositoryCommandHandler implements ICommandHandler<WatchRepositoryCommand> {
-
-    private logger: pino.Logger;
-    private publishTextNoteCommandHandler: ICommandHandler<PublishTextNoteCommand>
-    private gitPatchEventHandler: IEventHandler<GitPatchEvent>
-    private gitStateAnnouncementEventHandler: IEventHandler<GitStateAnnouncementEvent>
-    eventListenerRegistry: IEventListenerRegistry;
-
     constructor(
-        @inject("Logger") logger: pino.Logger,
-        @inject(RelayProvider.name) relayProvider: IRelayProvider,
-        @inject(EventListenerRegistry.name) eventListenerRegistry: IEventListenerRegistry,
+        @inject("Logger") private logger: pino.Logger,
+        @inject(EventListenerRegistry.name) private eventListenerRegistry: IEventListenerRegistry,
+        @inject(GitStateAnnouncementEvent.name) private gitStateAnnouncementEventHandler: IEventHandler<GitStateAnnouncementEvent>,
+        @inject(GitPatchEvent.name) private gitPatchEventHandler: IEventHandler<GitPatchEvent>,
+        @inject(PublishTextNoteCommand.name) private publishTextNoteCommandHandler: IEventHandler<PublishTextNoteCommand>,
     ) {
-        this.logger = logger;
-        this.publishTextNoteCommandHandler = resolveCommandHandler(PublishTextNoteCommand.name)
-        this.gitPatchEventHandler = resolveEventHandler(GitPatchEvent.name)
-        this.gitStateAnnouncementEventHandler = resolveEventHandler(GitStateAnnouncementEvent.name)
-        this.eventListenerRegistry = eventListenerRegistry;
     }
 
     async execute(command: WatchRepositoryCommand): Promise<void> {

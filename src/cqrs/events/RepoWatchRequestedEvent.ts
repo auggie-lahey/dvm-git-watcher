@@ -4,10 +4,9 @@ import IEventHandler from '../base/IEventHandler.ts';
 import IEvent from '../base/IEvent.ts';
 import {NostrEvent} from '@nostrify/nostrify';
 import {getParams, getTag} from "../../utils/nostrEventUtils.ts";
-import {resolveCommandHandler} from "../base/cqrs.ts";
 import { Address } from '@welshman/util';
 import {WatchRepositoryCommand} from "../commands/WatchRepositoryCommand.ts";
-import ICommandHandler from "../base/ICommandHandler.ts";
+import type ICommandHandler from "../base/ICommandHandler.ts";
 
 export class RepoWatchRequestedEvent implements IEvent {
     nostrEvent!: NostrEvent;
@@ -15,10 +14,11 @@ export class RepoWatchRequestedEvent implements IEvent {
 
 @injectable()
 export class RepoWatchRequestedEventHandler implements IEventHandler<RepoWatchRequestedEvent> {
-    private watchRepositoryCommandHandler: ICommandHandler<WatchRepositoryCommand>
 
-    constructor(@inject("Logger") private logger: pino.Logger) {
-        this.watchRepositoryCommandHandler = resolveCommandHandler(WatchRepositoryCommand.name)
+    constructor(
+        @inject("Logger") private logger: pino.Logger,
+        @inject(WatchRepositoryCommand.name) private watchRepositoryCommandHandler: ICommandHandler<WatchRepositoryCommand>,
+    ) {
     }
 
     async execute(event: RepoWatchRequestedEvent): Promise<void> {
@@ -39,6 +39,5 @@ export class RepoWatchRequestedEventHandler implements IEventHandler<RepoWatchRe
         } catch (e){
             this.logger.error("error when trying to start watch.", e)
         }
-
     }
 }

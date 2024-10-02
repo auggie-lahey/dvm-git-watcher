@@ -1,6 +1,6 @@
 import { container } from 'tsyringe';
 import pino from 'pino';
-import {registerCommandHandler, registerEventHandler, resolveEventHandler} from "./cqrs/base/cqrs.ts";
+import {registerCommandHandler, registerEventHandler} from "./cqrs/base/cqrs.ts";
 import {RepoWatchRequestedEvent, RepoWatchRequestedEventHandler} from "./cqrs/events/RepoWatchRequestedEvent.ts";
 import {PublishTextNoteCommand, PublishTextNoteCommandHandler} from "./cqrs/commands/PublishTextNoteCommand.ts";
 import { RelayProvider } from './RelayProvider.ts';
@@ -50,5 +50,5 @@ function setupListeners() {
         }
     ]
 
-    eventListenerRegistry.add("watch-job-requests", filters, resolveEventHandler(RepoWatchRequestedEvent.name))
+    eventListenerRegistry.add("watch-job-requests", filters,  container.resolve(RepoWatchRequestedEvent.name))
 }

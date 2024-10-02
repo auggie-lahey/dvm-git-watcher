@@ -15,13 +15,11 @@ export class PublishTextNoteCommand implements ICommand {
 export class PublishTextNoteCommandHandler implements ICommandHandler<PublishTextNoteCommand> {
 
     private relay: NRelay;
-    private logger: pino.Logger;
 
     constructor(
-        @inject("Logger") logger: pino.Logger,
+        @inject("Logger") private logger: pino.Logger,
         @inject(RelayProvider.name) relayProvider: IRelayProvider,
     ) {
-        this.logger = logger;
         this.relay = relayProvider.getDefaultPool();
 
     }

@@ -15,10 +15,8 @@ export class StartBuildCommand implements ICommand {
 @injectable()
 export class StartBuildCommandHandler implements ICommandHandler<StartBuildCommand> {
 
-    private logger: pino.Logger;
-
     constructor(
-        @inject("Logger") logger: pino.Logger,
+        @inject("Logger") private logger: pino.Logger,
         @inject(EventPublisher.name) private eventPublisher: IEventPublisher
     ) {
         this.logger = logger;

@@ -4,12 +4,10 @@ import IEventHandler from '../base/IEventHandler.ts';
 import IEvent from '../base/IEvent.ts';
 import {NostrEvent} from '@nostrify/nostrify';
 import { getTag} from "../../utils/nostrEventUtils.ts";
-import {resolveCommandHandler} from "../base/cqrs.ts";
 import { Address } from '@welshman/util';
 import {PublishTextNoteCommand} from "../commands/PublishTextNoteCommand.ts";
-import ICommandHandler from "../base/ICommandHandler.ts";
+import type ICommandHandler from "../base/ICommandHandler.ts";
 import { nip19 } from 'nostr-tools';
-import type IRelayProvider from "../../IRelayProvider.ts";
 
 export class GitPatchEvent implements IEvent {
     nostrEvent!: NostrEvent;
@@ -18,13 +16,10 @@ export class GitPatchEvent implements IEvent {
 @injectable()
 export class GitPatchEventHandler implements IEventHandler<GitPatchEvent> {
 
-
-    private publishTextNoteCommandHandler: ICommandHandler<PublishTextNoteCommand>
-
     constructor(
         @inject("Logger") private logger: pino.Logger,
+        @inject(PublishTextNoteCommand.name) private publishTextNoteCommandHandler: ICommandHandler<PublishTextNoteCommand>,
     ) {
-        this.publishTextNoteCommandHandler = resolveCommandHandler(PublishTextNoteCommand.name)
     }
 
     async execute(event: GitPatchEvent): Promise<void> {
