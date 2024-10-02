@@ -21,7 +21,6 @@ export class PublishTextNoteCommandHandler implements ICommandHandler<PublishTex
         @inject(RelayProvider.name) relayProvider: IRelayProvider,
     ) {
         this.relay = relayProvider.getDefaultPool();
-
     }
 
     async execute(command: PublishTextNoteCommand): Promise<void> {

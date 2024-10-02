@@ -12,9 +12,10 @@ import {IEventListenerRegistry} from "./listeners/IEventListenerRegistry.ts";
 import {nostrNow} from "./utils/nostrEventUtils.ts";
 import { EventPublisher } from './publisher/EventPublisher.ts';
 import {StartBuildCommand, StartBuildCommandHandler} from "./cqrs/commands/StartBuildCommand.ts";
+import IEventHandler from "./cqrs/base/IEventHandler.ts";
 
 export async function startup() {
-    const logger = pino();
+    const logger = pino.pino();
     logger.info("Running startup");
 
     container.registerInstance("Logger", logger);
@@ -50,5 +51,6 @@ function setupListeners() {
         }
     ]
 
-    eventListenerRegistry.add("watch-job-requests", filters,  container.resolve(RepoWatchRequestedEvent.name))
+    const repoWatchRequestedEventHandler: IEventHandler<RepoWatchRequestedEvent> = container.resolve(RepoWatchRequestedEvent.name);
+    eventListenerRegistry.add("watch-job-requests", filters, repoWatchRequestedEventHandler)
 }
