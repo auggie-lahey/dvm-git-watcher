@@ -45,7 +45,7 @@ export class GitStateAnnouncementEventHandler implements IEventHandler<GitStateA
 
         // TODO: account for multiple refs
         var firstRef = refs[0];
-        var branchName = firstRef[0].split("refs/heads/")[2];
+        var branchName = firstRef[0].split("refs/heads/")[1];
         var commitHash = firstRef[1];
 
         await this.startBuildCommandHanlder.execute({repoAddress: repoAddress, branchName: branchName, commitHash: commitHash})

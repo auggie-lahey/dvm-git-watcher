@@ -13,6 +13,10 @@ import {nostrNow} from "./utils/nostrEventUtils.ts";
 import { EventPublisher } from './publisher/EventPublisher.ts';
 import {StartBuildCommand, StartBuildCommandHandler} from "./cqrs/commands/StartBuildCommand.ts";
 import IEventHandler from "./cqrs/base/IEventHandler.ts";
+import {DockerBuildRequestedEvent, DockerBuildRequestedEventHandler} from "./cqrs/events/BuildRequestedEvent.ts";
+import {CloneRepositoryCommand, CloneRepositoryCommandHandler} from "./cqrs/commands/CloneRepositoryCommand.ts";
+import {DockerBuildCommand, DockerBuildCommandHandler} from "./cqrs/commands/DockerBuildCommand.ts";
+import {UploadToBlossomCommand, UploadToBlossomCommandHandler} from './cqrs/commands/UploadToBlossomCommand.ts';
 
 export async function startup() {
     const logger = pino.pino();
@@ -26,10 +30,14 @@ export async function startup() {
     registerEventHandler(RepoWatchRequestedEvent.name, RepoWatchRequestedEventHandler);
     registerEventHandler(GitPatchEvent.name, GitPatchEventHandler);
     registerEventHandler(GitStateAnnouncementEvent.name, GitStateAnnouncementEventHandler);
+    registerEventHandler(DockerBuildRequestedEvent.name, DockerBuildRequestedEventHandler);
 
     registerCommandHandler(PublishTextNoteCommand.name, PublishTextNoteCommandHandler)
     registerCommandHandler(WatchRepositoryCommand.name, WatchRepositoryCommandHandler)
     registerCommandHandler(StartBuildCommand.name, StartBuildCommandHandler)
+    registerCommandHandler(CloneRepositoryCommand.name, CloneRepositoryCommandHandler)
+    registerCommandHandler(DockerBuildCommand.name, DockerBuildCommandHandler)
+    registerCommandHandler(UploadToBlossomCommand.name, UploadToBlossomCommandHandler)
 
     container.registerSingleton(EventListenerRegistry.name, EventListenerRegistry);
 
@@ -42,7 +50,7 @@ export async function startup() {
 
 function setupListeners() {
     const eventListenerRegistry: IEventListenerRegistry = container.resolve(EventListenerRegistry.name);
-    var filters = [
+    var gitWatchFilters = [
         {
             kinds: [68001],
             "#j": ["git-proposal-commit-watch"],
@@ -52,5 +60,16 @@ function setupListeners() {
     ]
 
     const repoWatchRequestedEventHandler: IEventHandler<RepoWatchRequestedEvent> = container.resolve(RepoWatchRequestedEvent.name);
-    eventListenerRegistry.add("watch-job-requests", filters, repoWatchRequestedEventHandler)
+    eventListenerRegistry.add("watch-job-requests", gitWatchFilters, repoWatchRequestedEventHandler)
+
+    var dockerBuildFilters = [
+        {
+            kinds: [68001],
+            "#j": ["docker-build"],
+            limit: 1000,
+            since: nostrNow()
+        }
+    ]
+    const dockerBuildRequestedEventHandler: IEventHandler<DockerBuildRequestedEvent> = container.resolve(DockerBuildRequestedEvent.name);
+    eventListenerRegistry.add("docker-build-requests", dockerBuildFilters, dockerBuildRequestedEventHandler)
 }

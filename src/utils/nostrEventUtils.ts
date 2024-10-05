@@ -6,9 +6,7 @@ export function getParams(event: NostrEvent){
         .reduce((map, item) => {
             const key = item[1];
             const value = item[2]; // Convert the third element to a number
-            if (!isNaN(value)) {
-                map.set(key, value);
-            }
+            map.set(key, value);
             return map;
         }, new Map<string, string>());
 

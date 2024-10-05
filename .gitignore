@@ -1,5 +1,7 @@
 dvm-git-watcher.tar
 
+tmp
+
 .env
 .idea
 .vscode

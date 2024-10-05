@@ -36,6 +36,11 @@ export class StartBuildCommandHandler implements ICommandHandler<StartBuildComma
                 ],
                 [
                     "param",
+                    "branch_name",
+                    command.branchName
+                ],
+                [
+                    "param",
                     "commit_hash",
                     command.commitHash
                 ],
