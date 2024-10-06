@@ -1,10 +1,11 @@
 import {inject, injectable} from "tsyringe";
 import type pino from "pino";
 import ICommand from "../base/ICommand.ts";
-import ICommandHandler from '../base/ICommandHandler.ts';
-import { BlossomUploader } from '@nostrify/nostrify/uploaders';
 import {NSecSigner} from '@nostrify/nostrify';
-import * as path from "jsr:@std/path";
+import { BlossomClient } from "blossom-client-sdk";
+import path from "node:path";
+import {PublishTextNoteCommand} from "./PublishTextNoteCommand.ts";
+import type ICommandHandler from '../base/ICommandHandler.ts';
 
 
 export class UploadToBlossomCommand implements ICommand {
@@ -16,6 +17,7 @@ export class UploadToBlossomCommandHandler implements ICommandHandler<UploadToBl
 
     constructor(
         @inject("Logger") private logger: pino.Logger,
+        @inject(PublishTextNoteCommand.name) private publishTextNoteCommandHandler: ICommandHandler<PublishTextNoteCommand>,
     ) {
     }
 
@@ -23,24 +25,24 @@ export class UploadToBlossomCommandHandler implements ICommandHandler<UploadToBl
         this.logger.info(`Uploading file ${command.filePath} to Blossom`);
 
         const secretKey: string = Deno.env.get("NSEC_HEX") || ""; // TODO throw new Error("NSEC_HEX env var not set");
-        const signer = new NSecSigner(secretKey);
+        const nSecSigner = new NSecSigner(secretKey);
 
-        const uploader = new BlossomUploader({
-            servers: ['https://cdn.satellite.earth'],
-            signer: signer,
-        });
-
-        // const fileName = path.basename(command.filePath);
-        const fullFilePath = `file:/${Deno.cwd()}/${command.filePath}`;
+        const fileName = path.basename(command.filePath);
         const data = await Deno.readFile(command.filePath);
         const blob = new Blob([data], {type: 'application/x-tar'});
-        const file = new File([blob], 'bla.tar', { type: 'application/x-tar' });
 
         try{
+            const client = new BlossomClient("https://blossom.stens.dev", (event) => nSecSigner.signEvent(event));
 
-            const tags = await uploader.upload(file);
+            const uploadAuthEvent = await client.getUploadAuth(blob, 'Upload ' + fileName)
+            const result = await client.uploadBlob(blob, uploadAuthEvent)
 
-            console.log(tags)
+            const url = result.url
+
+            // TODO: this command should not be responsible for this, move this out
+            await this.publishTextNoteCommandHandler.execute({message: `Docker Build completed for file ${fileName}, download it here: ${url}`})
+
+            console.log(result)
         } catch (e) {
             console.log(e)
         }
