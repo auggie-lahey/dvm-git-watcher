@@ -1,6 +1,6 @@
 import { container } from 'tsyringe';
 import pino from 'pino';
-import {registerCommandHandler, registerEventHandler} from "./cqrs/base/cqrs.ts";
+import {registerCommandHandler, registerEventHandler, registerQueryHandler} from "./cqrs/base/cqrs.ts";
 import {RepoWatchRequestedEvent, RepoWatchRequestedEventHandler} from "./cqrs/events/RepoWatchRequestedEvent.ts";
 import {PublishTextNoteCommand, PublishTextNoteCommandHandler} from "./cqrs/commands/PublishTextNoteCommand.ts";
 import { RelayProvider } from './RelayProvider.ts';
@@ -17,6 +17,13 @@ import {DockerBuildRequestedEvent, DockerBuildRequestedEventHandler} from "./cqr
 import {CloneRepositoryCommand, CloneRepositoryCommandHandler} from "./cqrs/commands/CloneRepositoryCommand.ts";
 import {DockerBuildCommand, DockerBuildCommandHandler} from "./cqrs/commands/DockerBuildCommand.ts";
 import {UploadToBlossomCommand, UploadToBlossomCommandHandler} from './cqrs/commands/UploadToBlossomCommand.ts';
+import {GetStateAnnouncementQuery, GetStateAnnouncementQueryHandler} from "./cqrs/queries/GetStateAnnouncementQuery.ts";
+import {GetWatchSubscriptionQuery, GetWatchSubscriptionQueryHandler} from "./cqrs/queries/GetWatchSubscriptionQuery.ts";
+import {GetRepoAddressQuery, GetRepoAddressQueryHandler} from "./cqrs/queries/GetRepoAddressQuery.ts";
+import {
+    SaveWatchSubscriptionCommand,
+    SaveWatchSubscriptionCommandHandler
+} from "./cqrs/commands/SaveWatchSubscriptionCommand.ts";
 
 export async function startup() {
     const logger = pino.pino();
@@ -38,6 +45,11 @@ export async function startup() {
     registerCommandHandler(CloneRepositoryCommand.name, CloneRepositoryCommandHandler)
     registerCommandHandler(DockerBuildCommand.name, DockerBuildCommandHandler)
     registerCommandHandler(UploadToBlossomCommand.name, UploadToBlossomCommandHandler)
+    registerCommandHandler(SaveWatchSubscriptionCommand.name, SaveWatchSubscriptionCommandHandler)
+
+    registerQueryHandler(GetStateAnnouncementQuery.name, GetStateAnnouncementQueryHandler)
+    registerQueryHandler(GetRepoAddressQuery.name, GetRepoAddressQueryHandler)
+    registerQueryHandler(GetWatchSubscriptionQuery.name, GetWatchSubscriptionQueryHandler)
 
     container.registerSingleton(EventListenerRegistry.name, EventListenerRegistry);
 

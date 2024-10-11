@@ -14,6 +14,7 @@
     "npm:@scure/bip39@^1.3.0": "1.4.0",
     "npm:@welshman/lib@^0.0.17": "0.0.17",
     "npm:@welshman/util@^0.0.30": "0.0.30",
+    "npm:blossom-client-sdk@^1.1.1": "1.1.1",
     "npm:docker-cli-js@^2.10.0": "2.10.0",
     "npm:lru-cache@^10.2.0": "10.4.3",
     "npm:nostr-tools@^2.7.0": "2.7.2",
@@ -208,6 +209,12 @@
     },
     "base64-js@1.5.1": {
       "integrity": "sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA=="
+    },
+    "blossom-client-sdk@1.1.1": {
+      "integrity": "sha512-YaV8cLTuJ1z1vRcMdKIzWRtuV6JMcR11P/SFaPiVYWxaxOM12pWI5QOTcqCcoodbyhvcr9R3eIKoLF+2/e0Uvw==",
+      "dependencies": [
+        "@noble/hashes@1.5.0"
+      ]
     },
     "buffer@6.0.3": {
       "integrity": "sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==",
@@ -474,6 +481,7 @@
       "jsr:@std/assert@1",
       "npm:@welshman/lib@^0.0.17",
       "npm:@welshman/util@^0.0.30",
+      "npm:blossom-client-sdk@^1.1.1",
       "npm:docker-cli-js@^2.10.0",
       "npm:nostr-tools@^2.7.2",
       "npm:pino@^9.4.0",

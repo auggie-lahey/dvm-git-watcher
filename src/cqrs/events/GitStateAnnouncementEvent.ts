@@ -9,6 +9,12 @@ import {PublishTextNoteCommand} from "../commands/PublishTextNoteCommand.ts";
 import type ICommandHandler from "../base/ICommandHandler.ts";
 import { nip19 } from 'nostr-tools';
 import {StartBuildCommand} from "../commands/StartBuildCommand.ts";
+import {GetStateAnnouncementQuery} from "../queries/GetStateAnnouncementQuery.ts";
+import type IQueryHandler from "../base/IQueryHandler.ts";
+import {GetWatchSubscriptionQuery} from "../queries/GetWatchSubscriptionQuery.ts";
+import {GetRepoAddressQuery} from "../queries/GetRepoAddressQuery.ts";
+import {RepoWatchSubscription} from "../../RepoWatchSubscription.ts";
+import {SaveWatchSubscriptionCommand} from "../commands/SaveWatchSubscriptionCommand.ts";
 
 export class GitStateAnnouncementEvent implements IEvent {
     nostrEvent!: NostrEvent;
@@ -21,7 +27,11 @@ export class GitStateAnnouncementEventHandler implements IEventHandler<GitStateA
         @inject("Logger") private logger: pino.Logger,
         @inject(StartBuildCommand.name) private startBuildCommandHanlder: ICommandHandler<StartBuildCommand>,
         @inject(PublishTextNoteCommand.name) private publishTextNoteCommandHandler: ICommandHandler<PublishTextNoteCommand>,
+        @inject(GetRepoAddressQuery.name) private getRepoAddressQuery: IQueryHandler<GetRepoAddressQuery, Address>,
+        @inject(GetWatchSubscriptionQuery.name) private getWatchSubscriptionQuery: IQueryHandler<GetWatchSubscriptionQuery, RepoWatchSubscription>,
+        @inject(SaveWatchSubscriptionCommand.name) private saveWatchSubscriptionCommand: ICommandHandler<SaveWatchSubscriptionCommand>,
     ) {
+
     }
 
     async execute(event: GitStateAnnouncementEvent): Promise<void> {
@@ -30,11 +40,32 @@ export class GitStateAnnouncementEventHandler implements IEventHandler<GitStateA
         // TODO: We need to verify the author, now everyone can send this event
         const authorNpub = nip19.npubEncode(event.nostrEvent.pubkey);
         const repoIdentifier = getTag(event.nostrEvent, "d")[1]
-        const head = getTag(event.nostrEvent, "HEAD")[1];
 
-        const repoAddress = new Address(30617, event.nostrEvent.pubkey, repoIdentifier)
+        // Doing this extra call to prevent getting a different naddr if relays are omitted from the naddr (maybe naddr is not a good identifier to store our state)
+        const repoAddress = await this.getRepoAddressQuery.execute({pubkey: event.nostrEvent.pubkey, identifier: repoIdentifier})
 
-        this.logger.info(`Detected state-announcement on head ${head}, starting build.`)
+
+        const watchSubscription = await this.getWatchSubscriptionQuery.execute({repoAddress: repoAddress})
+
+       if(watchSubscription.latestStateAnnouncement === undefined){
+
+           // Run build for each branch
+       } else {
+           const fullBranchNames = watchSubscription.branchNames.map(b => `refs/heads/${b}`)
+           const commitsToBuild = watchSubscription.latestStateAnnouncement.tags
+               .filter(t => fullBranchNames.includes(t[0]))
+               .map(t => t[1])
+
+           console.log(commitsToBuild)
+       }
+
+       watchSubscription.latestStateAnnouncement = event.nostrEvent;
+       await this.saveWatchSubscriptionCommand.execute({subscription: watchSubscription})
+
+        console.log("subscription:")
+        console.log(watchSubscription)
+
+        this.logger.info(`Detected state-announcement}, starting build.`)
 
         var refs = getTagStartingWith(event.nostrEvent, "refs/heads/")
 
@@ -44,11 +75,10 @@ export class GitStateAnnouncementEventHandler implements IEventHandler<GitStateA
         }
 
         // TODO: account for multiple refs
-        var firstRef = refs[0];
-        var branchName = firstRef[0].split("refs/heads/")[1];
-        var commitHash = firstRef[1];
+        var branchName = refs[0][0].split("refs/heads/")[1];
+        var commitHash = refs[0][1];
 
         await this.startBuildCommandHanlder.execute({repoAddress: repoAddress, branchName: branchName, commitHash: commitHash})
-        await this.publishTextNoteCommandHandler.execute({message: `nostr:${authorNpub} changed HEAD of \`${head}\` on repo:${repoAddress.toNaddr()} `})
+        await this.publishTextNoteCommandHandler.execute({message: `nostr:${authorNpub} comitted to repo:${repoAddress.toNaddr()} `})
     }
 }
