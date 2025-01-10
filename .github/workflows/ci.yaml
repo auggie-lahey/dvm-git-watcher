@@ -16,4 +16,4 @@ jobs:
       - name: Upload to Blossom
         uses: Origami74/upload-blossom-action@main
         with:
-          host: 'https://blossom.nostr.com/'
+          host: 'https://blossom.hzrd149.com'
