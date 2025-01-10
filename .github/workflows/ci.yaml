@@ -14,4 +14,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Upload to Blossom
-        uses: https://github.com/Origami74/upload-blossom-action
+        uses: Origami74/upload-blossom-action@main
