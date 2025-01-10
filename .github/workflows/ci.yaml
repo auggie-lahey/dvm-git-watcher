@@ -10,8 +10,10 @@ permissions:
   packages: write
 
 jobs:
-  build-and-package:
+  upload-blossom-job:
     runs-on: ubuntu-latest
     steps:
       - name: Upload to Blossom
         uses: Origami74/upload-blossom-action@main
+        with:
+          host: 'https://blossom.nostr.com/'
