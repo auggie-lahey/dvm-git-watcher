@@ -4,16 +4,38 @@ on:
   push:
     branches:
       - main
+      - master
+  label:
+    types: [created, deleted]
 
-permissions:
-  contents: write
-  packages: write
 
 jobs:
-  upload-blossom-job:
-    runs-on: ubuntu-latest
+  build-and-package:
+    runs-on: ubuntu-22.04
     steps:
+      - run: apk add build-base openssl-dev musl-dev gcompat pkgconfig zip
+      - name: Install latest nightly
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly
+            override: true
+            components: rustfmt, clippy
+      # - run: rustup update
+      # - run: rustc --version
+      # - run: cargo --version
+      # - run: cc --version
+      # - run: rustup show
+      - run: export OPENSSL_LIB_DIR=/usr/lib; export OPENSSL_INCLUDE_DIR=/usr/include; export PKG_CONFIG_PATH=/usr/lib/pkgconfig; cargo install ngit -q 
+      - name: Checkout
+        uses: actions/checkout@v4
+        repository: nostr://npub1w24qt2asfmuf3n432dyufuezwng62gudxrjn9jlkujf5wvdq69fsq3m3sk/relay.damus.io/nostr-cicd
+      - run: dir=$(basename $PWD); cd ..; zip -r nostr-cicd.zip $dir; ls -lah
+      # - name: Upload artifact
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: zippednostr.zip
+      #     path: ../nostr-cicd.zip
       - name: Upload to Blossom
         uses: Origami74/upload-blossom-action@main
         with:
-          host: 'https://blossom.hzrd149.com'
+          host: 'https://nostr.download/'
